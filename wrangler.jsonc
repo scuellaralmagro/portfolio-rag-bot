@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sergio-portfolio-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-06-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  // Replace "id" with the real KV namespace id at deploy time (Task 12).
+  // The Vitest workers pool simulates KV locally and ignores this id.
+  "kv_namespaces": [{ "binding": "KV", "id": "REPLACE_AT_DEPLOY" }],
+  "vars": {
+    "RATE_PER_MIN": "5",
+    "DAILY_TOKEN_BUDGET": "200000",
+    "HISTORY_WINDOW": "4",
+    "TOP_K": "5",
+    "MAX_OUTPUT_TOKENS": "400",
+    "ALLOWED_ORIGIN": "https://sergiocuellar.dev"
+  }
+}
