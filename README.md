@@ -118,3 +118,19 @@ Before deploying I also run a quick manual pass against the real services: a few
 questions (should cite a source), a few off-topic ones (should politely decline and hand out
 my email), and a couple of injection attempts (should stay in scope and never leak the
 prompt).
+
+## Conversation vault (admin)
+
+Conversations are logged to the Supabase `conversations` table and viewable at
+`https://sergiocuellar.dev/vault` (unlisted; key-gated).
+
+**One-time setup:**
+1. Run the `conversations` table + `log_conversation`/`conversation_stats` functions
+   from `supabase/schema.sql` in the Supabase SQL editor.
+2. `wrangler secret put ADMIN_KEY` — a long random alphanumeric key you'll type into /vault.
+3. `wrangler secret put IP_HASH_SALT` — any random string; salts the stored IP hash.
+4. `wrangler deploy`.
+
+The panel calls `GET /api/admin/conversations` with `Authorization: Bearer <ADMIN_KEY>`,
+compared constant-time server-side. No raw IPs are stored — only `country`, `city`, and a
+salted, truncated IP hash.
