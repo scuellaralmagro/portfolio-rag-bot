@@ -37,4 +37,23 @@ describe('router', () => {
     expect(res.status).not.toBe(405);
     expect(res.status).toBe(400);
   });
+
+  it('answers OPTIONS preflight for admin with CORS incl. Authorization', async () => {
+    const res = await SELF.fetch('https://api.sergiocuellar.dev/api/admin/conversations', {
+      method: 'OPTIONS',
+      headers: { Origin: 'https://sergiocuellar.dev' },
+    });
+    expect(res.status).toBe(204);
+    expect(res.headers.get('Access-Control-Allow-Headers')).toContain('Authorization');
+  });
+
+  it('401s an unauthenticated admin GET (delegates, not 404/405)', async () => {
+    const res = await SELF.fetch('https://api.sergiocuellar.dev/api/admin/conversations', { method: 'GET' });
+    expect(res.status).toBe(401);
+  });
+
+  it('405s a non-GET admin request', async () => {
+    const res = await SELF.fetch('https://api.sergiocuellar.dev/api/admin/conversations', { method: 'POST' });
+    expect(res.status).toBe(405);
+  });
 });

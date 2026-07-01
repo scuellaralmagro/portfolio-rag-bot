@@ -1,4 +1,5 @@
 import { handleChat } from './chat';
+import { handleAdmin } from './admin';
 import type { Env } from './types';
 
 const DEV_ORIGIN = 'http://localhost:4321';
@@ -11,8 +12,8 @@ function allowedOrigin(req: Request, env: Env): string | null {
 
 function corsHeaders(req: Request, env: Env): Record<string, string> {
   const h: Record<string, string> = {
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   };
   const origin = allowedOrigin(req, env);
   if (origin) h['Access-Control-Allow-Origin'] = origin;
@@ -25,10 +26,18 @@ export default {
     const cors = corsHeaders(req, env);
 
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
-    if (req.method !== 'POST') return new Response('Method Not Allowed', { status: 405, headers: cors });
-    if (url.pathname !== '/api/chat') return new Response('Not Found', { status: 404, headers: cors });
 
-    const res = await handleChat(req, env, ctx);
+    let res: Response;
+    if (url.pathname === '/api/chat') {
+      if (req.method !== 'POST') return new Response('Method Not Allowed', { status: 405, headers: cors });
+      res = await handleChat(req, env, ctx);
+    } else if (url.pathname.startsWith('/api/admin/')) {
+      if (req.method !== 'GET') return new Response('Method Not Allowed', { status: 405, headers: cors });
+      res = await handleAdmin(req, env, url);
+    } else {
+      return new Response('Not Found', { status: 404, headers: cors });
+    }
+
     const headers = new Headers(res.headers);
     for (const [k, v] of Object.entries(cors)) headers.set(k, v);
     return new Response(res.body, { status: res.status, headers });
