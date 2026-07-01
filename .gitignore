@@ -5,6 +5,12 @@ dist/
 *.log
 .DS_Store
 
+# LinkedIn data export (private source material for the KB — never commit)
+linkedin-data/
+
+# CVs (private source material for the KB — never commit)
+CVs/
+
 # Planning docs (kept local, not committed)
 docs/superpowers/specs/2026-06-29-phase9-ask-my-portfolio-rag-design.md
 docs/superpowers/plans/2026-06-29-phase9-ask-my-portfolio-api.md
