@@ -4,6 +4,7 @@ import { checkRateLimit, checkBudget, recordUsage } from './ratelimit';
 import { retrieve } from './retrieve';
 import { buildMessages } from './prompt';
 import { streamChat } from './openai';
+import { logConversation, assembleTranscript, hashIp } from './conversations';
 import { sseEncode, tokenEvent, sourcesEvent, doneEvent, errorEvent } from './sse';
 
 const BUDGET_MSG =
@@ -33,6 +34,10 @@ export async function handleChat(request: Request, env: Env, ctx: ExecutionConte
   }
 
   const latest = userMsgs[userMsgs.length - 1].content;
+  const sessionId = body.sessionId ?? crypto.randomUUID();
+  const cf = (request as { cf?: { country?: string; city?: string } }).cf;
+  const country = cf?.country ?? null;
+  const city = cf?.city ?? null;
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -46,13 +51,39 @@ export async function handleChat(request: Request, env: Env, ctx: ExecutionConte
         const messages = buildMessages(body.messages, chunks, Number(env.HISTORY_WINDOW));
 
         let usage: Usage = { input: 0, output: 0 };
+        let assistantText = '';
         for await (const part of streamChat(messages, env)) {
-          if (part.token) emit(tokenEvent(part.token));
+          if (part.token) {
+            assistantText += part.token;
+            emit(tokenEvent(part.token));
+          }
           if (part.usage) usage = part.usage;
         }
-        emit(sourcesEvent(chunks.map((c) => ({ title: c.title, ref: c.ref }))));
+        const sources = chunks.map((c) => ({ title: c.title, ref: c.ref }));
+        emit(sourcesEvent(sources));
         emit(doneEvent(usage));
         ctx.waitUntil(recordUsage(usage.input + usage.output, env));
+        ctx.waitUntil(
+          (async () => {
+            try {
+              const ipHash = await hashIp(ip, env.IP_HASH_SALT);
+              await logConversation(
+                {
+                  sessionId,
+                  messages: assembleTranscript(body.messages, assistantText),
+                  sources,
+                  usage,
+                  country,
+                  city,
+                  ipHash,
+                },
+                env,
+              );
+            } catch {
+              // Logging must never break or delay the visitor's chat.
+            }
+          })(),
+        );
       } catch {
         emit(errorEvent('server_error', 'Something went wrong. Please try again.'));
       } finally {

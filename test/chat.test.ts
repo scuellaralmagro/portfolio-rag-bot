@@ -29,6 +29,8 @@ function mockHappyPath() {
                  'data: {"choices":[{"delta":{}}],"usage":{"prompt_tokens":10,"completion_tokens":5}}',
                  'data: [DONE]', ''].join('\n\n'),
            { headers: { 'Content-Type': 'text/event-stream' } });
+  fetchMock.get('https://test.supabase.co')
+    .intercept({ path: '/rest/v1/rpc/log_conversation', method: 'POST' }).reply(204, '');
 }
 
 describe('handleChat', () => {
@@ -72,5 +74,41 @@ describe('handleChat', () => {
     expect(res.status).toBe(200);
     expect(text).toContain('"type":"error"');
     expect(text).toContain('budget_exceeded');
+  });
+
+  it('schedules a conversation log on the happy path', async () => {
+    mockHappyPath();
+    const ctx = createExecutionContext();
+    const res = await handleChat(
+      post({ messages: [{ role: 'user', content: 'rag?' }], turnstileToken: 'ok', sessionId: 'sess-1' }),
+      env, ctx,
+    );
+    await readSSE(res);
+    await waitOnExecutionContext(ctx);
+    // If the log_conversation interceptor was never hit, this throws.
+    fetchMock.assertNoPendingInterceptors();
+  });
+
+  it('still completes the stream when logging fails', async () => {
+    fetchMock.get('https://challenges.cloudflare.com')
+      .intercept({ path: '/turnstile/v0/siteverify', method: 'POST' }).reply(200, { success: true });
+    fetchMock.get('https://api.openai.com')
+      .intercept({ path: '/v1/embeddings', method: 'POST' })
+      .reply(200, { data: [{ embedding: Array.from({ length: 1536 }, () => 0.01) }] });
+    fetchMock.get('https://test.supabase.co')
+      .intercept({ path: '/rest/v1/rpc/match_documents', method: 'POST' })
+      .reply(200, [{ id: 1, content: 'x', metadata: { title: 'T', ref: 'r' }, similarity: 0.9 }]);
+    fetchMock.get('https://api.openai.com')
+      .intercept({ path: '/v1/chat/completions', method: 'POST' })
+      .reply(200, ['data: {"choices":[{"delta":{"content":"hi"}}]}', 'data: [DONE]', ''].join('\n\n'),
+             { headers: { 'Content-Type': 'text/event-stream' } });
+    fetchMock.get('https://test.supabase.co')
+      .intercept({ path: '/rest/v1/rpc/log_conversation', method: 'POST' }).reply(500, 'boom');
+    const ctx = createExecutionContext();
+    const res = await handleChat(post({ messages: [{ role: 'user', content: 'hi' }], turnstileToken: 'ok', sessionId: 's2' }), env, ctx);
+    const text = await readSSE(res);
+    await waitOnExecutionContext(ctx);
+    expect(res.status).toBe(200);
+    expect(text).toContain('"type":"done"');
   });
 });
