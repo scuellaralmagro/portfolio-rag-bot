@@ -10,6 +10,8 @@ export interface Env {
   TOP_K: string;
   MAX_OUTPUT_TOKENS: string;
   ALLOWED_ORIGIN: string;
+  ADMIN_KEY: string;
+  IP_HASH_SALT: string;
 }
 
 export interface ChatMessage {
@@ -19,6 +21,7 @@ export interface ChatMessage {
 export interface ChatRequest {
   messages: ChatMessage[];
   turnstileToken: string;
+  sessionId?: string;
 }
 export interface RetrievedChunk {
   content: string;
@@ -29,4 +32,41 @@ export interface RetrievedChunk {
 export interface Usage {
   input: number;
   output: number;
+}
+export interface ConversationSummary {
+  totalConversations: number;
+  totalTokens: number;
+  today: number;
+}
+export interface ConversationListItem {
+  id: number;
+  session_id: string;
+  created_at: string;
+  updated_at: string;
+  country: string | null;
+  city: string | null;
+  ip_hash: string | null;
+  input_tokens: number;
+  output_tokens: number;
+  preview: string;
+}
+export interface ConversationDetail extends ConversationListItem {
+  messages: ChatMessage[];
+  sources: { title: string; ref: string }[];
+}
+export interface ListParams {
+  q?: string;
+  from?: string;
+  to?: string;
+  limit: number;
+  offset: number;
+}
+export interface LogParams {
+  sessionId: string;
+  messages: ChatMessage[];
+  sources: { title: string; ref: string }[];
+  usage: Usage;
+  country: string | null;
+  city: string | null;
+  ipHash: string;
 }

@@ -8,3 +8,7 @@ OPENAI_API_KEY=sk-...
 TURNSTILE_SECRET=0x...
 SUPABASE_URL=https://your-project-ref.supabase.co
 SUPABASE_SERVICE_KEY=your-service-role-key
+
+# Admin vault: long random alphanumeric key you type into /vault, and a salt for IP hashing.
+ADMIN_KEY=choose-a-long-random-key
+IP_HASH_SALT=choose-a-random-salt
