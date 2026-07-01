@@ -9,7 +9,7 @@ export async function embed(text: string, apiKey: string): Promise<number[]> {
     },
     body: JSON.stringify({ model: 'text-embedding-3-small', input: text }),
   });
-  if (!res.ok) throw new Error(`embed failed: OpenAI ${res.status}`);
+  if (!res.ok) throw new Error(`embed failed: OpenAI ${res.status} ${await res.text()}`);
   const json = (await res.json()) as { data: { embedding: number[] }[] };
   return json.data[0].embedding;
 }
