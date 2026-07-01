@@ -29,8 +29,12 @@ describe('router', () => {
     expect(res.status).toBe(404);
   });
 
-  it('delegates POST /api/chat (200)', async () => {
+  it('delegates POST /api/chat to the handler (not a routing rejection)', async () => {
+    // A body-less POST reaches handleChat, which rejects the malformed body with 400.
+    // The point is delegation: the router does not answer with 404/405 for this route+method.
     const res = await SELF.fetch('https://api.sergiocuellar.dev/api/chat', { method: 'POST' });
-    expect(res.status).toBe(200);
+    expect(res.status).not.toBe(404);
+    expect(res.status).not.toBe(405);
+    expect(res.status).toBe(400);
   });
 });
