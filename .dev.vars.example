@@ -1,0 +1,10 @@
+# Copy this file to `.dev.vars` and fill in real values.
+# `.dev.vars` is git-ignored. It is loaded automatically by:
+#   - `wrangler dev`   (local Worker runtime secrets)
+#   - `npm run ingest` (via tsx --env-file-if-exists)
+# Use the Supabase *service_role* key (it bypasses RLS to write documents).
+
+OPENAI_API_KEY=sk-...
+TURNSTILE_SECRET=0x...
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_SERVICE_KEY=your-service-role-key

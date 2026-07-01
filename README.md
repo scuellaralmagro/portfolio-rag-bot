@@ -62,7 +62,9 @@ npm run typecheck
 npm run dev       # wrangler dev
 ```
 
-`wrangler dev` reads secrets from a git-ignored `.dev.vars`:
+Copy `.dev.vars.example` to `.dev.vars` (git-ignored) and fill in real values. This single
+file is used by both `wrangler dev` and `npm run ingest`, so you only keep one set of local
+secrets:
 
 ```
 OPENAI_API_KEY=...
@@ -70,6 +72,8 @@ TURNSTILE_SECRET=...
 SUPABASE_URL=...
 SUPABASE_SERVICE_KEY=...
 ```
+
+Use the Supabase **service_role** key (it bypasses RLS to write documents).
 
 ## Configuration
 
@@ -91,8 +95,7 @@ Whenever the `knowledge/` files change, re-run `npm run ingest` to re-embed them
    `api.sergiocuellar.dev` route is already configured.
 2. Set the secrets: `npx wrangler secret put OPENAI_API_KEY` (and the same for
    `TURNSTILE_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`).
-3. Ingest the knowledge base:
-   `SUPABASE_URL=... SUPABASE_SERVICE_KEY=... OPENAI_API_KEY=... npm run ingest`.
+3. Ingest the knowledge base: fill in `.dev.vars` (see above) and run `npm run ingest`.
 4. `npm test && npm run typecheck`, then `npx wrangler deploy`.
 
 Quick smoke test once it's live:
