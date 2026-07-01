@@ -9,6 +9,10 @@ create table documents (
 
 create index on documents using hnsw (embedding vector_cosine_ops);
 
+-- Enable RLS with no policies: the anon/public API key can't read the table,
+-- while the Worker's service_role key bypasses RLS (so ingest + retrieval work).
+alter table documents enable row level security;
+
 create function match_documents(query_embedding vector(1536), match_count int default 5)
 returns table (id bigint, content text, metadata jsonb, similarity float)
 language sql stable as $$
