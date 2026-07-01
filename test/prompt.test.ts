@@ -15,6 +15,10 @@ describe('buildMessages', () => {
     expect(out[0].content).toContain('Sergio shipped RAG at Kynetix.');
   });
 
+  it('instructs the model to reply in the user\'s language', () => {
+    expect(SYSTEM_PROMPT).toMatch(/same language the user writes in/i);
+  });
+
   it('keeps only the last `window` history messages, in order', () => {
     const history: ChatMessage[] = [
       { role: 'user', content: 'a' },
