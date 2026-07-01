@@ -7,10 +7,8 @@
   "observability": { "enabled": true },
   // Custom-domain route (Cloudflare must manage DNS for sergiocuellar.dev).
   "routes": [{ "pattern": "api.sergiocuellar.dev", "custom_domain": true }],
-  // Replace "id" with the real KV namespace id at deploy time (Task 12):
-  //   npx wrangler kv namespace create KV
   // The Vitest workers pool simulates KV locally and ignores this id.
-  "kv_namespaces": [{ "binding": "KV", "id": "REPLACE_AT_DEPLOY" }],
+  "kv_namespaces": [{ "binding": "KV", "id": "4f66239a81fb4ac5b67014fe9569fda7" }],
   "vars": {
     "RATE_PER_MIN": "5",
     "DAILY_TOKEN_BUDGET": "200000",
