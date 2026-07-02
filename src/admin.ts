@@ -10,6 +10,7 @@ function json(data: unknown, status = 200): Response {
 }
 
 function clampInt(v: string | null, dflt: number, max: number): number {
+  if (v === null || v.trim() === '') return dflt;
   const n = Number(v);
   return Number.isFinite(n) && n >= 0 ? Math.min(Math.floor(n), max) : dflt;
 }

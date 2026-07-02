@@ -33,6 +33,19 @@ describe('handleAdmin', () => {
     expect(body.summary.totalTokens).toBe(3);
   });
 
+  it('defaults to limit=50 (not 0) when no limit param is given', async () => {
+    let listedPath = '';
+    fetchMock.get(base).intercept({ path: (p) => p.startsWith('/rest/v1/conversations?'), method: 'GET' })
+      .reply(200, (opts) => { listedPath = String(opts.path); return []; });
+    fetchMock.get(base).intercept({ path: '/rest/v1/rpc/conversation_stats', method: 'POST' })
+      .reply(200, [{ total_conversations: 0, total_tokens: 0, today: 0 }]);
+    const { request, url } = get('/api/admin/conversations', 'Bearer test-admin-key');
+    const res = await handleAdmin(request, env, url);
+    expect(res.status).toBe(200);
+    expect(listedPath).toContain('limit=50');
+    expect(listedPath).not.toContain('limit=0');
+  });
+
   it('404s for an unknown conversation id', async () => {
     fetchMock.get(base).intercept({ path: (p) => p.startsWith('/rest/v1/conversations?id=eq.999'), method: 'GET' }).reply(200, []);
     const { request, url } = get('/api/admin/conversations/999', 'Bearer test-admin-key');
