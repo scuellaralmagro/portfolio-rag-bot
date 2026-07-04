@@ -2,6 +2,7 @@ import type {
   ChatMessage, Env, ListParams, LogParams,
   ConversationListItem, ConversationDetail, ConversationSummary,
 } from './types';
+import { getBudgetStatus } from './ratelimit';
 
 const LIST_COLUMNS =
   'id,session_id,created_at,updated_at,country,city,ip_hash,input_tokens,output_tokens,preview';
@@ -69,13 +70,14 @@ export async function listConversations(
   env: Env,
 ): Promise<{ items: ConversationListItem[]; summary: ConversationSummary }> {
   const headers = supabaseHeaders(env);
-  const [itemsRes, statsRes] = await Promise.all([
+  const [itemsRes, statsRes, dailyTokenBudget] = await Promise.all([
     fetch(`${env.SUPABASE_URL}/rest/v1/conversations?${buildListQuery(p)}`, { headers }),
     fetch(`${env.SUPABASE_URL}/rest/v1/rpc/conversation_stats`, {
       method: 'POST',
       headers: { ...headers, 'Content-Type': 'application/json' },
       body: '{}',
     }),
+    getBudgetStatus(env),
   ]);
   if (!itemsRes.ok) throw new Error(`listConversations failed: Supabase ${itemsRes.status}`);
   if (!statsRes.ok) throw new Error(`conversation_stats failed: Supabase ${statsRes.status}`);
@@ -88,6 +90,7 @@ export async function listConversations(
       totalConversations: Number(s.total_conversations),
       totalTokens: Number(s.total_tokens),
       today: Number(s.today),
+      dailyTokenBudget,
     },
   };
 }

@@ -22,3 +22,9 @@ export async function recordUsage(tokens: number, env: Env): Promise<void> {
   const used = Number((await env.KV.get(key)) ?? '0');
   await env.KV.put(key, String(used + tokens), { expirationTtl: 60 * 60 * 48 });
 }
+
+export async function getBudgetStatus(env: Env): Promise<{ limit: number; used: number; remaining: number }> {
+  const limit = Number(env.DAILY_TOKEN_BUDGET);
+  const used = Number((await env.KV.get(`budget:${todayUTC()}`)) ?? '0');
+  return { limit, used, remaining: Math.max(limit - used, 0) };
+}

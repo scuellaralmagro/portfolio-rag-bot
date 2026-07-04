@@ -27,7 +27,13 @@ describe('conversation data access', () => {
     const out = await listConversations({ limit: 50, offset: 0 }, env);
     expect(out.items).toHaveLength(1);
     expect(out.items[0].preview).toBe('hi');
-    expect(out.summary).toEqual({ totalConversations: 3, totalTokens: 42, today: 1 });
+    const limit = Number(env.DAILY_TOKEN_BUDGET);
+    expect(out.summary).toEqual({
+      totalConversations: 3,
+      totalTokens: 42,
+      today: 1,
+      dailyTokenBudget: { limit, used: 0, remaining: limit },
+    });
   });
 
   it('getConversation returns the row or null', async () => {

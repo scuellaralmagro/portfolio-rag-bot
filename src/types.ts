@@ -37,6 +37,7 @@ export interface ConversationSummary {
   totalConversations: number;
   totalTokens: number;
   today: number;
+  dailyTokenBudget: { limit: number; used: number; remaining: number };
 }
 export interface ConversationListItem {
   id: number;

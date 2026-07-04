@@ -33,6 +33,19 @@ describe('handleAdmin', () => {
     expect(body.summary.totalTokens).toBe(3);
   });
 
+  it('includes the remaining daily token budget in the summary', async () => {
+    fetchMock.get(base).intercept({ path: (p) => p.startsWith('/rest/v1/conversations?'), method: 'GET' })
+      .reply(200, []);
+    fetchMock.get(base).intercept({ path: '/rest/v1/rpc/conversation_stats', method: 'POST' })
+      .reply(200, [{ total_conversations: 0, total_tokens: 0, today: 0 }]);
+    const { request, url } = get('/api/admin/conversations', 'Bearer test-admin-key');
+    const res = await handleAdmin(request, env, url);
+    expect(res.status).toBe(200);
+    const body = await res.json() as { summary: { dailyTokenBudget: { limit: number; used: number; remaining: number } } };
+    const limit = Number(env.DAILY_TOKEN_BUDGET);
+    expect(body.summary.dailyTokenBudget).toEqual({ limit, used: 0, remaining: limit });
+  });
+
   it('defaults to limit=50 (not 0) when no limit param is given', async () => {
     let listedPath = '';
     fetchMock.get(base).intercept({ path: (p) => p.startsWith('/rest/v1/conversations?'), method: 'GET' })
